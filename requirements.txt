@@ -1,5 +1,5 @@
-# requirements.txt (VERSÃO ESTÁVEL)
+# /tiktok-uploader/requirements.txt
 Flask
+requests
 google-api-python-client
 google-auth
-b2sdk

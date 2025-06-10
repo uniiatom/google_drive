@@ -1,15 +1,14 @@
-# docker-compose.yml (PARA USO LOCAL)
-version: '3.8'
+# /tiktok-uploader/docker-compose.yml (VERSÃO PARA SWARM/PRODUÇÃO)
 
 services:
-  transfer-app:
-    build: .
-    container_name: gdrive-to-b2-local-test
-    restart: unless-stopped
+  # O nome do serviço, ex: 'uploader'
+  uploader:
+    # Aponte para a imagem que você VAI criar e enviar para o Docker Hub
+    # Formato: seu-usuario-dockerhub/nome-da-imagem:tag
+    image: uniiatom/tiktok-uploader:1.0 
     ports:
-      - "5001:5000"
-    environment:
-      # SUAS CREDENCIAIS DO BACKBLAZE B2 - APENAS PARA TESTE LOCAL
-      - B2_KEY_ID=005cc43ce991eb90000000001
-      - B2_APPLICATION_KEY=K005UlEQm9Zi4YRJZw6MJsZ1vOrHwkw
-      - B2_BUCKET_NAME=viralizarseguidores
+      - "5002:5002"
+    deploy:
+      # Política de reinicio para o modo Swarm
+      restart_policy:
+        condition: on-failure
