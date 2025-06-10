@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  transfer-app:
+    build: .
+    container_name: gdrive-to-b2-transfer
+    restart: unless-stopped
+    ports:
+      # Mapeia a porta 5000 do contêiner para a 5000 da sua VPS
+      - "5000:5000"
