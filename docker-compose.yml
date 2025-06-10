@@ -1,10 +1,15 @@
+# docker-compose.yml (PARA USO LOCAL)
 version: '3.8'
 
 services:
   transfer-app:
     build: .
-    container_name: gdrive-to-b2-transfer
+    container_name: gdrive-to-b2-local-test
     restart: unless-stopped
     ports:
-      # Mapeia a porta 5000 do contêiner para a 5000 da sua VPS
-      - "5000:5000"
+      - "5001:5000"
+    environment:
+      # SUAS CREDENCIAIS DO BACKBLAZE B2 - APENAS PARA TESTE LOCAL
+      - B2_KEY_ID=005cc43ce991eb90000000001
+      - B2_APPLICATION_KEY=K005UlEQm9Zi4YRJZw6MJsZ1vOrHwkw
+      - B2_BUCKET_NAME=viralizarseguidores

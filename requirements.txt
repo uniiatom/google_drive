@@ -1,3 +1,4 @@
+# requirements.txt (VERSÃO ESTÁVEL)
 Flask
 google-api-python-client
 google-auth

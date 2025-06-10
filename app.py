@@ -1,3 +1,4 @@
+# app.py (VERSÃO ESTÁVEL E FUNCIONAL)
 import os
 import io
 from flask import Flask, request, jsonify
@@ -13,16 +14,15 @@ from b2sdk.v2 import *
 
 app = Flask(__name__)
 
-# --- CONFIGURAÇÃO DAS CREDENCIAIS DO BACKBLAZE B2 (via variáveis de ambiente) ---
+# --- CONFIGURAÇÃO DAS CREDENCIAIS DO BACKBLAZE B2 ---
 B2_KEY_ID = os.environ.get('B2_KEY_ID')
 B2_APPLICATION_KEY = os.environ.get('B2_APPLICATION_KEY')
 B2_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
 
-# Validação para garantir que as variáveis de ambiente foram configuradas
 if not all([B2_KEY_ID, B2_APPLICATION_KEY, B2_BUCKET_NAME]):
     raise ValueError("As variáveis de ambiente do Backblaze (B2_KEY_ID, B2_APPLICATION_KEY, B2_BUCKET_NAME) não foram definidas.")
 
-# --- INICIALIZAÇÃO DO CLIENTE DO BACKBLAZE B2 (feito uma vez) ---
+# --- INICIALIZAÇÃO DO CLIENTE DO BACKBLAZE B2 ---
 info = InMemoryAccountInfo()
 b2_api = B2Api(info)
 b2_api.authorize_account("production", B2_KEY_ID, B2_APPLICATION_KEY)
@@ -39,31 +39,29 @@ def transfer_video():
     access_token = data['access_token']
     
     try:
-        # 1. Autenticar no Google Drive usando o access_token fornecido
-        #    O escopo 'drive.readonly' ou 'drive' já deve ter sido autorizado quando o token foi gerado.
         creds = credentials.Credentials(token=access_token)
         drive_service = build('drive', 'v3', credentials=creds)
 
-        # 2. Pegar metadados do arquivo no Google Drive (para saber o nome)
         print(f"Buscando metadados do arquivo ID: {file_id}")
         file_metadata = drive_service.files().get(fileId=file_id).execute()
         file_name = file_metadata.get('name', f'video_{file_id}.mp4')
         print(f"Iniciando transferência do arquivo: {file_name}")
 
-        # 3. Baixar o arquivo do Google Drive para a memória RAM (stream)
         request_download = drive_service.files().get_media(fileId=file_id)
-        fh = io.BytesIO() # Cria um "arquivo" em memória
+        fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fh, request_download)
         
         done = False
+        print("Iniciando download do Google Drive...")
         while not done:
             status, done = downloader.next_chunk()
             if status:
-                print(f"Download do Google Drive {int(status.progress() * 100)}%.")
+                # Este log de progresso do download funciona e podemos mantê-lo
+                print(f"Download do Google Drive: {int(status.progress() * 100)}%.")
         
-        fh.seek(0) # Retorna ao início do stream para o upload
+        print("Download do Google Drive concluído.")
+        fh.seek(0)
 
-        # 4. Fazer o upload do conteúdo em memória para o Backblaze B2
         print(f"Iniciando upload para o bucket '{B2_BUCKET_NAME}' no Backblaze B2...")
         uploaded_file = b2_bucket.upload_bytes(
             data_bytes=fh.getvalue(),
@@ -83,7 +81,6 @@ def transfer_video():
         }), 200
 
     except HttpError as error:
-        # Erro comum se o token for inválido ou expirado
         print(f"Ocorreu um erro na API do Google: {error}")
         return jsonify({"error": f"Erro na API do Google: {error.reason}", "details": str(error)}), 401
     except Exception as e:
